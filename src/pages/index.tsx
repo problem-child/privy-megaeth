@@ -2,7 +2,7 @@ import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useAccount, useBalance, useChainId, useConnectorClient, useConfig, useConnect } from "wagmi";
 import { useState } from "react";
 import { ethers } from "ethers";
-import { buySharesWithEthers, sellSharesWithEthers } from "../utils/ethersContract";
+import { buyShares, sellShares, TransactionMethod, getMethodDisplayName, getMethodDescription } from "../utils/unifiedContract";
 
 export default function Home() {
   const { ready, authenticated, user, login, logout } = usePrivy();
@@ -20,14 +20,16 @@ export default function Home() {
   const [playerId, setPlayerId] = useState('');
   const [shareAmount, setShareAmount] = useState('');
   const [ethValue, setEthValue] = useState('');
+  const [buyMethod, setBuyMethod] = useState<TransactionMethod>('contract');
   const [isLoading, setIsLoading] = useState(false);
-  const [txResult, setTxResult] = useState<{success: boolean, txHash?: string, error?: string} | null>(null);
+  const [txResult, setTxResult] = useState<{success: boolean, txHash?: string, error?: string, method?: string} | null>(null);
 
   // SellShares form state
   const [sellPlayerId, setSellPlayerId] = useState('');
   const [sellShareAmount, setSellShareAmount] = useState('');
+  const [sellMethod, setSellMethod] = useState<TransactionMethod>('contract');
   const [isSellLoading, setIsSellLoading] = useState(false);
-  const [sellTxResult, setSellTxResult] = useState<{success: boolean, txHash?: string, error?: string} | null>(null);
+  const [sellTxResult, setSellTxResult] = useState<{success: boolean, txHash?: string, error?: string, method?: string} | null>(null);
 
   // Handle faucet request - simplified to just open the URL
   const handleFaucetRequest = () => {
@@ -83,18 +85,20 @@ export default function Home() {
       const ethersProvider = new ethers.BrowserProvider(connectorClient.transport);
       const signer = await ethersProvider.getSigner();
 
-      const result = await buySharesWithEthers(
+      const result = await buyShares(
         signer,
         parseInt(playerId),
         parseInt(shareAmount),
-        ethValue
+        ethValue,
+        buyMethod
       );
 
       setTxResult(result);
     } catch (error) {
       setTxResult({
         success: false,
-        error: error instanceof Error ? error.message : 'Transaction failed'
+        error: error instanceof Error ? error.message : 'Transaction failed',
+        method: buyMethod
       });
     } finally {
       setIsLoading(false);
@@ -116,17 +120,19 @@ export default function Home() {
       const ethersProvider = new ethers.BrowserProvider(connectorClient.transport);
       const signer = await ethersProvider.getSigner();
 
-      const result = await sellSharesWithEthers(
+      const result = await sellShares(
         signer,
         parseInt(sellPlayerId),
-        parseInt(sellShareAmount)
+        parseInt(sellShareAmount),
+        sellMethod
       );
 
       setSellTxResult(result);
     } catch (error) {
       setSellTxResult({
         success: false,
-        error: error instanceof Error ? error.message : 'Transaction failed'
+        error: error instanceof Error ? error.message : 'Transaction failed',
+        method: sellMethod
       });
     } finally {
       setIsSellLoading(false);
@@ -152,7 +158,7 @@ export default function Home() {
               <div className="md:col-span-2 mb-6">
                 <div className="bg-orange-50 border border-orange-200 rounded-md p-4">
                   <h2 className="text-lg font-semibold text-orange-800 mb-3">
-                    🌐 Provider & Network Information
+                    ������ Provider & Network Information
                   </h2>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div className="space-y-2 text-sm">
@@ -266,17 +272,54 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* BuyShares Section - NEW */}
+              {/* BuyShares Section - Updated with Method Selection */}
               <div className="md:col-span-2 mb-6">
                 <div className="bg-green-50 border border-green-200 rounded-md p-4">
                   <h2 className="text-lg font-semibold text-green-800 mb-3">
-                    🛒 Buy Shares (Ethers Implementation)
+                    🛒 Buy Shares - Choose Your Method
                   </h2>
                   <p className="text-green-600 text-sm mb-4">
-                    Use ethers.js to call the TopStrike contract's buyShares function
+                    Choose between contract calls or raw transaction signing for buying shares
                   </p>
 
-                                    <div className="grid gap-4 md:grid-cols-3 mb-4">
+                  {/* Method Selection */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-green-800 mb-3">
+                      Transaction Method
+                    </label>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="buyMethod"
+                          value="contract"
+                          checked={buyMethod === 'contract'}
+                          onChange={(e) => setBuyMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-green-600"
+                        />
+                        <div>
+                          <div className="font-medium text-green-800">Contract Call</div>
+                          <div className="text-sm text-green-600">Uses ethers.js contract abstraction</div>
+                        </div>
+                      </label>
+                      <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="buyMethod"
+                          value="raw"
+                          checked={buyMethod === 'raw'}
+                          onChange={(e) => setBuyMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-green-600"
+                        />
+                        <div>
+                          <div className="font-medium text-green-800">Raw Transaction</div>
+                          <div className="text-sm text-green-600">Sign and broadcast raw transaction</div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3 mb-4">
                     <div>
                       <label className="block text-sm font-semibold text-green-800 mb-2">
                         Player ID
@@ -320,7 +363,7 @@ export default function Home() {
                     disabled={isLoading || !isConnected}
                     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
                   >
-                    {isLoading ? '⏳ Processing...' : '🛒 Buy Shares with Ethers'}
+                    {isLoading ? '⏳ Processing...' : `🛒 Buy Shares via ${getMethodDisplayName(buyMethod)}`}
                   </button>
 
                   {/* Transaction Result */}
@@ -329,6 +372,7 @@ export default function Home() {
                       {txResult.success ? (
                         <div>
                           <p className="text-green-800 font-medium">✅ Transaction Successful!</p>
+                          <p className="text-green-700 text-sm">Method: {getMethodDisplayName(txResult.method as TransactionMethod)}</p>
                           {txResult.txHash && (
                             <p className="text-green-700 text-sm mt-1">
                               TX Hash:{' '}
@@ -346,6 +390,7 @@ export default function Home() {
                       ) : (
                         <div>
                           <p className="text-red-800 font-medium">❌ Transaction Failed</p>
+                          <p className="text-red-700 text-sm">Method: {getMethodDisplayName(txResult.method as TransactionMethod)}</p>
                           <p className="text-red-700 text-sm mt-1">{txResult.error}</p>
                         </div>
                       )}
@@ -360,15 +405,52 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* SellShares Section - NEW */}
+              {/* SellShares Section - Updated with Method Selection */}
               <div className="md:col-span-2 mb-6">
                 <div className="bg-red-50 border border-red-200 rounded-md p-4">
                   <h2 className="text-lg font-semibold text-red-800 mb-3">
-                    💸 Sell Shares (Ethers Implementation)
+                    💸 Sell Shares - Choose Your Method
                   </h2>
                   <p className="text-red-600 text-sm mb-4">
-                    Use ethers.js to call the TopStrike contract's sellShares function
+                    Choose between contract calls or raw transaction signing for selling shares
                   </p>
+
+                  {/* Method Selection */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-red-800 mb-3">
+                      Transaction Method
+                    </label>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="sellMethod"
+                          value="contract"
+                          checked={sellMethod === 'contract'}
+                          onChange={(e) => setSellMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-red-600"
+                        />
+                        <div>
+                          <div className="font-medium text-red-800">Contract Call</div>
+                          <div className="text-sm text-red-600">Uses ethers.js contract abstraction</div>
+                        </div>
+                      </label>
+                      <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="sellMethod"
+                          value="raw"
+                          checked={sellMethod === 'raw'}
+                          onChange={(e) => setSellMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-red-600"
+                        />
+                        <div>
+                          <div className="font-medium text-red-800">Raw Transaction</div>
+                          <div className="text-sm text-red-600">Sign and broadcast raw transaction</div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
 
                   <div className="grid gap-4 md:grid-cols-2 mb-4">
                     <div>
@@ -402,7 +484,7 @@ export default function Home() {
                     disabled={isSellLoading || !isConnected}
                     className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
                   >
-                    {isSellLoading ? '⏳ Processing...' : '💸 Sell Shares with Ethers'}
+                    {isSellLoading ? '⏳ Processing...' : `💸 Sell Shares via ${getMethodDisplayName(sellMethod)}`}
                   </button>
 
                   {/* Sell Transaction Result */}
@@ -411,6 +493,7 @@ export default function Home() {
                       {sellTxResult.success ? (
                         <div>
                           <p className="text-red-800 font-medium">✅ Sell Transaction Successful!</p>
+                          <p className="text-red-700 text-sm">Method: {getMethodDisplayName(sellTxResult.method as TransactionMethod)}</p>
                           {sellTxResult.txHash && (
                             <p className="text-red-700 text-sm mt-1">
                               TX Hash:{' '}
@@ -428,6 +511,7 @@ export default function Home() {
                       ) : (
                         <div>
                           <p className="text-red-800 font-medium">❌ Sell Transaction Failed</p>
+                          <p className="text-red-700 text-sm">Method: {getMethodDisplayName(sellTxResult.method as TransactionMethod)}</p>
                           <p className="text-red-700 text-sm mt-1">{sellTxResult.error}</p>
                         </div>
                       )}
