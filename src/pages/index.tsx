@@ -279,7 +279,7 @@ export default function Home() {
                     🛒 Buy Shares - Choose Your Method
                   </h2>
                   <p className="text-green-600 text-sm mb-4">
-                    Choose between contract calls or raw transaction signing for buying shares
+                    Choose between contract calls, raw transactions, or ultra-fast realtime API for buying shares
                   </p>
 
                   {/* Method Selection */}
@@ -287,7 +287,7 @@ export default function Home() {
                     <label className="block text-sm font-semibold text-green-800 mb-3">
                       Transaction Method
                     </label>
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-3 md:grid-cols-3">
                       <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
                         <input
                           type="radio"
@@ -314,6 +314,20 @@ export default function Home() {
                         <div>
                           <div className="font-medium text-green-800">Raw Transaction</div>
                           <div className="text-sm text-green-600">Sign and broadcast raw transaction</div>
+                        </div>
+                      </label>
+                      <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="buyMethod"
+                          value="realtime"
+                          checked={buyMethod === 'realtime'}
+                          onChange={(e) => setBuyMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-green-600"
+                        />
+                        <div>
+                          <div className="font-medium text-green-800">⚡ Realtime</div>
+                          <div className="text-sm text-green-600">Ultra-fast MegaETH realtime API</div>
                         </div>
                       </label>
                     </div>
@@ -412,7 +426,7 @@ export default function Home() {
                     💸 Sell Shares - Choose Your Method
                   </h2>
                   <p className="text-red-600 text-sm mb-4">
-                    Choose between contract calls or raw transaction signing for selling shares
+                    Choose between contract calls, raw transactions, or ultra-fast realtime API for selling shares
                   </p>
 
                   {/* Method Selection */}
@@ -420,7 +434,7 @@ export default function Home() {
                     <label className="block text-sm font-semibold text-red-800 mb-3">
                       Transaction Method
                     </label>
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-3 md:grid-cols-3">
                       <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
                         <input
                           type="radio"
@@ -447,6 +461,20 @@ export default function Home() {
                         <div>
                           <div className="font-medium text-red-800">Raw Transaction</div>
                           <div className="text-sm text-red-600">Sign and broadcast raw transaction</div>
+                        </div>
+                      </label>
+                      <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="sellMethod"
+                          value="realtime"
+                          checked={sellMethod === 'realtime'}
+                          onChange={(e) => setSellMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-red-600"
+                        />
+                        <div>
+                          <div className="font-medium text-red-800">⚡ Realtime</div>
+                          <div className="text-sm text-red-600">Ultra-fast MegaETH realtime API</div>
                         </div>
                       </label>
                     </div>

@@ -211,46 +211,55 @@ The app is configured with:
 - MegaETH as the default and supported chain
 - Wagmi integration for blockchain interactions
 
-## Usage Examples
+## Transaction Methods
 
-### Basic Authentication
+This project provides multiple ways to interact with the MegaETH blockchain, each optimized for different use cases:
+
+### Available Methods
+
+1. **Contract Method** (`'contract'`)
+   - Uses ethers.js contract abstraction
+   - Easier development with automatic encoding/decoding
+   - Good for most standard interactions
+
+2. **Raw Transaction Method** (`'raw'`)
+   - Manual transaction signing and broadcasting
+   - Lower-level control over transaction parameters
+   - Useful for advanced use cases
+
+3. **Realtime Transaction Method** (`'realtime'`) ⭐ **NEW**
+   - Uses MegaETH's `realtime_sendRawTransaction` API
+   - Ultra-fast execution with immediate receipt
+   - No polling required - gets results in ~10ms
+   - Perfect for high-frequency trading applications
+
+### Usage Examples
 
 ```typescript
-import { usePrivy } from '@privy-io/react-auth';
+import { buyShares, sellShares } from '../utils/unifiedContract';
 
-function LoginButton() {
-  const { ready, authenticated, login, logout } = usePrivy();
-  
-  if (!ready) return <div>Loading...</div>;
-  
-  return authenticated ? (
-    <button onClick={logout}>Logout</button>
-  ) : (
-    <button onClick={login}>Login</button>
-  );
-}
+// Using contract method (default)
+const result1 = await buyShares(signer, playerId, amount, value, 'contract');
+
+// Using raw transaction method
+const result2 = await buyShares(signer, playerId, amount, value, 'raw');
+
+// Using realtime method (recommended for speed)
+const result3 = await buyShares(signer, playerId, amount, value, 'realtime');
 ```
 
-### Wallet Information
+### Realtime Method Benefits
 
-```typescript
-import { useWallets } from '@privy-io/react-auth';
-import { useAccount, useBalance } from 'wagmi';
+- ⚡ **10ms execution**: Transactions are executed and receipts returned within 10 milliseconds
+- 📄 **Immediate receipts**: No need to poll for transaction confirmation
+- 🔒 **Preconfirmed**: Uses MegaETH's preconfirmation guarantees
+- 🎯 **Perfect for trading**: Ideal for high-frequency trading applications
 
-function WalletInfo() {
-  const { wallets } = useWallets();
-  const { address } = useAccount();
-  const { data: balance } = useBalance({ address });
-  
-  return (
-    <div>
-      <p>Address: {address}</p>
-      <p>Balance: {balance?.formatted} ETH</p>
-      <p>Wallets: {wallets.length}</p>
-    </div>
-  );
-}
-```
+### When to Use Each Method
+
+- **Use `contract`** for standard development and simpler code
+- **Use `raw`** when you need fine-grained control over transaction parameters
+- **Use `realtime`** for maximum speed and immediate feedback (recommended for production trading apps)
 
 ## Troubleshooting
 

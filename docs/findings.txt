@@ -1,0 +1,7 @@
+Behaviour seems to change based on:
+
+    Disable confirmation modals (react-auth only)
+    Turn off the default UIs that prompt the user to review before sending transactions and signing messages
+
+rawTransactionContract successfully signs with confirms enabled
+If disabled, the gas settings are messed up during signing
