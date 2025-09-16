@@ -5,3 +5,54 @@ Behaviour seems to change based on:
 
 rawTransactionContract successfully signs with confirms enabled
 If disabled, the gas settings are messed up during signing
+
+
+When confirm enabled:
+
+https://auth.privy.io/api/v1/analytics_events
+    {"event_name":"embedded_wallet_iframe_user_signer_sign_started","client_id":"eb451bc0-34b4-4c69-970f-67a7acd747e3","payload":{"iframeClientType":"web","clientTimestamp":"2025-09-16T22:56:26.269Z"}}
+
+
+https://auth.privy.io/api/v1/user_signers/authenticate
+    {"encryption_type":"HPKE","recipient_public_key":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcMhjxJrsA3ai/EoA8NsF7bof+6taCQfzjbJQHj/riTYplRAtY9K3TIJAsKCHUWSMbeepNplZjEyuB/IVbKaGXw==","user_jwt":""}
+
+
+https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
+    {"chain_type":"ethereum","method":"eth_signTransaction",
+    "params":{"transaction":{"
+    from":"0x4DB5853f6EefEd3E93fCFcFd4A41745412c29626",
+    "to":"0x4d7f960195b322f6225115d9f34e3830e6f36bb7",
+    "nonce":"0x9",
+    "chain_id":"0x18c6",
+    "data":"0xbeebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+    "value":"0x2c68af0bb140000",
+    "type":2,
+    "gas_limit":"0x2508e",
+    "gas_price":"0x2508e",
+    "max_fee_per_gas":"0x124f80",
+    "max_priority_fee_per_gas":"0x0"}}}
+
+^^^^ Note correct gas settings sent
+
+
+Now, disable confirm using privy dashboard, and the same code / process...
+
+https://auth.privy.io/api/v1/analytics_events
+    {"event_name":"embedded_wallet_iframe_user_signer_sign_started","client_id":"eb451bc0-34b4-4c69-970f-67a7acd747e3","payload":{"iframeClientType":"web","clientTimestamp":"2025-09-16T22:59:32.978Z"}}
+
+https://auth.privy.io/api/v1/user_signers/authenticate
+    {"encryption_type":"HPKE","recipient_public_key":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMs+kVMDOMZvbKVYalutrcr20ZT0vFgI7Hzy1Q8nxVc7q340vrNS84W7xZmla+tRnu57bx6WdScBDQXIC1tz5Ow==","user_jwt":""}
+
+https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
+    {"chain_type":"ethereum","method":"eth_signTransaction",
+    "params":{"transaction":
+    {"from":"0x4db5853f6eefed3e93fcfcfd4a41745412c29626",
+    "to":"0x4d7f960195b322f6225115d9f34e3830e6f36bb7",
+    "nonce":"0x307861",
+    "chain_id":"0x18c6",
+    "data":"0xbeebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+    "value":"0x3078326336386166306262313430303030",
+    "gas_limit":"0x30783235303865",
+    "gas_price":"0x30786634323430"}}}
+
+^^^ Note LARGE value + gas settings. Different transaction type
