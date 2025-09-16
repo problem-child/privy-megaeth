@@ -30,7 +30,6 @@ export default function App({ Component, pageProps }: AppProps) {
         // Create embedded wallets for users who don't have a wallet
         embeddedWallets: {
           createOnLogin: "users-without-wallets",
-          showWalletUIs: showWalletUIs,
         },
         // Configure the default chain for embedded wallets
         defaultChain: megaeth,
@@ -40,11 +39,6 @@ export default function App({ Component, pageProps }: AppProps) {
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig}>
-          <div style={{ padding: '10px' }}>
-            <button onClick={() => setShowWalletUIs(!showWalletUIs)}>
-              {showWalletUIs ? 'Hide' : 'Show'} Wallet UIs
-            </button>
-          </div>
           <Component {...pageProps} />
         </WagmiProvider>
       </QueryClientProvider>
