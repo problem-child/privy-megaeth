@@ -1,5 +1,8 @@
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useAccount, useBalance, useChainId, useConnectorClient, useConfig, useConnect } from "wagmi";
+import { useState } from "react";
+import { ethers } from "ethers";
+import { buySharesWithEthers, sellSharesWithEthers } from "../utils/ethersContract";
 
 export default function Home() {
   const { ready, authenticated, user, login, logout } = usePrivy();
@@ -12,6 +15,19 @@ export default function Home() {
   const { data: connectorClient } = useConnectorClient();
   const config = useConfig();
   const { connectors, connect } = useConnect();
+
+  // BuyShares form state
+  const [playerId, setPlayerId] = useState('');
+  const [shareAmount, setShareAmount] = useState('');
+  const [ethValue, setEthValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [txResult, setTxResult] = useState<{success: boolean, txHash?: string, error?: string} | null>(null);
+
+  // SellShares form state
+  const [sellPlayerId, setSellPlayerId] = useState('');
+  const [sellShareAmount, setSellShareAmount] = useState('');
+  const [isSellLoading, setIsSellLoading] = useState(false);
+  const [sellTxResult, setSellTxResult] = useState<{success: boolean, txHash?: string, error?: string} | null>(null);
 
   // Handle faucet request - simplified to just open the URL
   const handleFaucetRequest = () => {
@@ -51,6 +67,71 @@ export default function Home() {
   const googleAccount = user?.linkedAccounts?.find(
     (account) => account.type === "google_oauth"
   );
+
+  // Handle buyShares transaction
+  const handleBuyShares = async () => {
+    if (!connectorClient || !playerId || !shareAmount || !ethValue) {
+      setTxResult({ success: false, error: 'Please fill in all fields' });
+      return;
+    }
+
+    setIsLoading(true);
+    setTxResult(null);
+
+    try {
+      // Create ethers signer from wagmi connector client
+      const ethersProvider = new ethers.BrowserProvider(connectorClient.transport);
+      const signer = await ethersProvider.getSigner();
+
+      const result = await buySharesWithEthers(
+        signer,
+        parseInt(playerId),
+        parseInt(shareAmount),
+        ethValue
+      );
+
+      setTxResult(result);
+    } catch (error) {
+      setTxResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Transaction failed'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle sellShares transaction
+  const handleSellShares = async () => {
+    if (!connectorClient || !sellPlayerId || !sellShareAmount) {
+      setSellTxResult({ success: false, error: 'Please fill in all fields' });
+      return;
+    }
+
+    setIsSellLoading(true);
+    setSellTxResult(null);
+
+    try {
+      // Create ethers signer from wagmi connector client
+      const ethersProvider = new ethers.BrowserProvider(connectorClient.transport);
+      const signer = await ethersProvider.getSigner();
+
+      const result = await sellSharesWithEthers(
+        signer,
+        parseInt(sellPlayerId),
+        parseInt(sellShareAmount)
+      );
+
+      setSellTxResult(result);
+    } catch (error) {
+      setSellTxResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Transaction failed'
+      });
+    } finally {
+      setIsSellLoading(false);
+    }
+  };;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -182,6 +263,182 @@ export default function Home() {
                       ))}
                     </div>
                   </details>
+                </div>
+              </div>
+
+              {/* BuyShares Section - NEW */}
+              <div className="md:col-span-2 mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                  <h2 className="text-lg font-semibold text-green-800 mb-3">
+                    🛒 Buy Shares (Ethers Implementation)
+                  </h2>
+                  <p className="text-green-600 text-sm mb-4">
+                    Use ethers.js to call the TopStrike contract's buyShares function
+                  </p>
+
+                                    <div className="grid gap-4 md:grid-cols-3 mb-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-green-800 mb-2">
+                        Player ID
+                      </label>
+                      <input
+                        type="number"
+                        value={playerId}
+                        onChange={(e) => setPlayerId(e.target.value)}
+                        placeholder="e.g., 1"
+                        className="w-full px-4 py-3 bg-white border-2 border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 placeholder-gray-500 font-medium transition duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-green-800 mb-2">
+                        Share Amount
+                      </label>
+                      <input
+                        type="number"
+                        value={shareAmount}
+                        onChange={(e) => setShareAmount(e.target.value)}
+                        placeholder="e.g., 100"
+                        className="w-full px-4 py-3 bg-white border-2 border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 placeholder-gray-500 font-medium transition duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-green-800 mb-2">
+                        ETH Value
+                      </label>
+                      <input
+                        type="text"
+                        value={ethValue}
+                        onChange={(e) => setEthValue(e.target.value)}
+                        placeholder="e.g., 0.01"
+                        className="w-full px-4 py-3 bg-white border-2 border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 placeholder-gray-500 font-medium transition duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleBuyShares}
+                    disabled={isLoading || !isConnected}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
+                  >
+                    {isLoading ? '⏳ Processing...' : '🛒 Buy Shares with Ethers'}
+                  </button>
+
+                  {/* Transaction Result */}
+                  {txResult && (
+                    <div className={`mt-4 p-3 rounded ${txResult.success ? 'bg-green-100 border border-green-300' : 'bg-red-100 border border-red-300'}`}>
+                      {txResult.success ? (
+                        <div>
+                          <p className="text-green-800 font-medium">✅ Transaction Successful!</p>
+                          {txResult.txHash && (
+                            <p className="text-green-700 text-sm mt-1">
+                              TX Hash:{' '}
+                              <a
+                                href={`https://web3.okx.com/explorer/megaeth-testnet/tx/${txResult.txHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-green-600 hover:text-green-800 underline break-all"
+                              >
+                                {txResult.txHash}
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-red-800 font-medium">❌ Transaction Failed</p>
+                          <p className="text-red-700 text-sm mt-1">{txResult.error}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!isConnected && (
+                    <p className="text-yellow-600 text-sm mt-2">
+                      ⚠️ Please connect your wallet to use this feature
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* SellShares Section - NEW */}
+              <div className="md:col-span-2 mb-6">
+                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                  <h2 className="text-lg font-semibold text-red-800 mb-3">
+                    💸 Sell Shares (Ethers Implementation)
+                  </h2>
+                  <p className="text-red-600 text-sm mb-4">
+                    Use ethers.js to call the TopStrike contract's sellShares function
+                  </p>
+
+                  <div className="grid gap-4 md:grid-cols-2 mb-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-red-800 mb-2">
+                        Player ID
+                      </label>
+                      <input
+                        type="number"
+                        value={sellPlayerId}
+                        onChange={(e) => setSellPlayerId(e.target.value)}
+                        placeholder="e.g., 1"
+                        className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500 font-medium transition duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-red-800 mb-2">
+                        Share Amount
+                      </label>
+                      <input
+                        type="number"
+                        value={sellShareAmount}
+                        onChange={(e) => setSellShareAmount(e.target.value)}
+                        placeholder="e.g., 50"
+                        className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-500 font-medium transition duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSellShares}
+                    disabled={isSellLoading || !isConnected}
+                    className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
+                  >
+                    {isSellLoading ? '⏳ Processing...' : '💸 Sell Shares with Ethers'}
+                  </button>
+
+                  {/* Sell Transaction Result */}
+                  {sellTxResult && (
+                    <div className={`mt-4 p-3 rounded ${sellTxResult.success ? 'bg-red-100 border border-red-300' : 'bg-red-100 border border-red-300'}`}>
+                      {sellTxResult.success ? (
+                        <div>
+                          <p className="text-red-800 font-medium">✅ Sell Transaction Successful!</p>
+                          {sellTxResult.txHash && (
+                            <p className="text-red-700 text-sm mt-1">
+                              TX Hash:{' '}
+                              <a
+                                href={`https://web3.okx.com/explorer/megaeth-testnet/tx/${sellTxResult.txHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-red-600 hover:text-red-800 underline break-all"
+                              >
+                                {sellTxResult.txHash}
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-red-800 font-medium">❌ Sell Transaction Failed</p>
+                          <p className="text-red-700 text-sm mt-1">{sellTxResult.error}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!isConnected && (
+                    <p className="text-yellow-600 text-sm mt-2">
+                      ⚠️ Please connect your wallet to use this feature
+                    </p>
+                  )}
                 </div>
               </div>
 

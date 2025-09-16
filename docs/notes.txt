@@ -1,0 +1,7 @@
+So, to sumarise, I think we are specifically trying to figure out how to sign and send a transaction using an 'embedded user wallet' (https://docs.privy.io/wallets/overview#user-wallets) - not delegate wallets, and not external (imported) wallets.
+
+From what I can in the docs, it should be possible to sign an transaction using an embedded wallet without any special policies or rules. As mentioned the other day, we are already able to sign messages using the embedded wallet, it's just that the gas settings are being misinterpretted by during the privy signing process and this is causing the transaction to be rejected by the chain.
+
+One thing I haven't tried yet is the higher level 'sign transaction' method (https://docs.privy.io/wallets/using-wallets/ethereum/sign-a-transaction). Currently using the lower level 'ethereum provider' method (https://docs.privy.io/wallets/using-wallets/ethereum/ethereum-provider) as this is what I've been seeing elsewhere. This higher level call might work better and is a nicer example to engage with the privy support ppl if it does still fail.
+
+Looking at the privy discord, like with the TG chat, thy are going to want a tight code example / minimal app to test with. I will put this together when the chain is back up. I suspect it might be something to do with the way we hook up the chain and set privy up in the higher level app code, so a clean app from scratch will help isolate this. It shouldn't take long to sort, but does need a working chain
