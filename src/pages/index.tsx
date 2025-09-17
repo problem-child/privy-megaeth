@@ -1,4 +1,4 @@
-import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { usePrivy, useWallets, useSignTransaction } from "@privy-io/react-auth";
 import { useAccount, useBalance, useChainId, useConnectorClient, useConfig, useConnect } from "wagmi";
 import { useState } from "react";
 import { ethers } from "ethers";
@@ -7,6 +7,7 @@ import { buyShares, sellShares, TransactionMethod, getMethodDisplayName, getMeth
 export default function Home() {
   const { ready, authenticated, user, login, logout } = usePrivy();
   const { wallets } = useWallets();
+  const { signTransaction } = useSignTransaction();
   const { address, isConnected, connector } = useAccount();
   const chainId = useChainId();
   const { data: balance } = useBalance({
@@ -77,12 +78,12 @@ export default function Home() {
       return;
     }
 
-    // For Privy method, we need the user's address, for others we need connector client
-    if (buyMethod === 'privy' && !address) {
-      setTxResult({ success: false, error: 'User address not available for Wagmi method' });
+    // For Privy and Privy Native methods, we need the user's address, for others we need connector client
+    if ((buyMethod === 'privy' || buyMethod === 'privy-native') && !address) {
+      setTxResult({ success: false, error: 'User address not available for Privy method' });
       return;
-    } else if (buyMethod !== 'privy' && !connectorClient) {
-      setTxResult({ success: false, error: 'Please fill in all fields' });
+    } else if (buyMethod !== 'privy' && buyMethod !== 'privy-native' && !connectorClient) {
+      setTxResult({ success: false, error: 'Connector client not available' });
       return;
     }
 
@@ -98,6 +99,25 @@ export default function Home() {
           parseInt(shareAmount),
           ethValue,
           buyMethod
+        );
+        setTxResult(result);
+      } else if (buyMethod === 'privy-native') {
+        // Use Privy Native SignTransaction method
+        if (!connectorClient) {
+          throw new Error('Connector client not available for provider');
+        }
+        const ethersProvider = new ethers.BrowserProvider(connectorClient.transport);
+
+        const result = await buyShares(
+          address as `0x${string}`,
+          parseInt(playerId),
+          parseInt(shareAmount),
+          ethValue,
+          buyMethod,
+          {
+            signTransaction,
+            provider: ethersProvider
+          }
         );
         setTxResult(result);
       } else {
@@ -136,12 +156,12 @@ export default function Home() {
       return;
     }
 
-    // For Privy method, we need the user's address, for others we need connector client
-    if (sellMethod === 'privy' && !address) {
-      setSellTxResult({ success: false, error: 'User address not available for Wagmi method' });
+    // For Privy and Privy Native methods, we need the user's address, for others we need connector client
+    if ((sellMethod === 'privy' || sellMethod === 'privy-native') && !address) {
+      setSellTxResult({ success: false, error: 'User address not available for Privy method' });
       return;
-    } else if (sellMethod !== 'privy' && !connectorClient) {
-      setSellTxResult({ success: false, error: 'Please fill in all fields' });
+    } else if (sellMethod !== 'privy' && sellMethod !== 'privy-native' && !connectorClient) {
+      setSellTxResult({ success: false, error: 'Connector client not available' });
       return;
     }
 
@@ -156,6 +176,24 @@ export default function Home() {
           parseInt(sellPlayerId),
           parseInt(sellShareAmount),
           sellMethod
+        );
+        setSellTxResult(result);
+      } else if (sellMethod === 'privy-native') {
+        // Use Privy Native SignTransaction method
+        if (!connectorClient) {
+          throw new Error('Connector client not available for provider');
+        }
+        const ethersProvider = new ethers.BrowserProvider(connectorClient.transport);
+
+        const result = await sellShares(
+          address as `0x${string}`,
+          parseInt(sellPlayerId),
+          parseInt(sellShareAmount),
+          sellMethod,
+          {
+            signTransaction,
+            provider: ethersProvider
+          }
         );
         setSellTxResult(result);
       } else {
@@ -326,7 +364,7 @@ export default function Home() {
                     🛒 Buy Shares - Choose Your Method
                   </h2>
                   <p className="text-green-600 text-sm mb-4">
-                    Choose between contract calls, ethers signed transactions, ethers realtime API, or Wagmi signed send for buying shares
+                    Choose between contract calls, ethers signed transactions, ethers realtime API, Wagmi signed send, or Privy native signing for buying shares
                   </p>
 
                   {/* Method Selection */}
@@ -334,7 +372,7 @@ export default function Home() {
                     <label className="block text-sm font-semibold text-green-800 mb-3">
                       Transaction Method
                     </label>
-                    <div className="grid gap-3 md:grid-cols-4">
+                    <div className="grid gap-3 md:grid-cols-5">
                       <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
                         <input
                           type="radio"
@@ -391,6 +429,20 @@ export default function Home() {
                           <div className="text-sm text-green-600">Uses Wagmi wallet integration</div>
                         </div>
                       </label>
+                      <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="buyMethod"
+                          value="privy-native"
+                          checked={buyMethod === 'privy-native'}
+                          onChange={(e) => setBuyMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-green-600"
+                        />
+                        <div>
+                          <div className="font-medium text-green-800">🎯 Privy Native Sign</div>
+                          <div className="text-sm text-green-600">Uses Privy native signTransaction</div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
@@ -435,7 +487,7 @@ export default function Home() {
 
                   <button
                     onClick={handleBuyShares}
-                    disabled={isLoading || (buyMethod !== 'privy' && !isConnected)}
+                    disabled={isLoading || ((buyMethod !== 'privy' && buyMethod !== 'privy-native') && !isConnected)}
                     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
                   >
                     {isLoading ? '⏳ Processing...' : `🛒 Buy Shares via ${getMethodDisplayName(buyMethod)}`}
@@ -472,9 +524,9 @@ export default function Home() {
                     </div>
                   )}
 
-                  {((buyMethod !== 'privy' && !isConnected) || (buyMethod === 'privy' && !address)) && (
+                  {(((buyMethod !== 'privy' && buyMethod !== 'privy-native') && !isConnected) || ((buyMethod === 'privy' || buyMethod === 'privy-native') && !address)) && (
                     <p className="text-yellow-600 text-sm mt-2">
-                      ⚠️ {buyMethod === 'privy' ? 'Please connect your Wagmi wallet' : 'Please connect your wallet'} to use this feature
+                      ⚠️ {(buyMethod === 'privy' || buyMethod === 'privy-native') ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
                     </p>
                   )}
                 </div>
@@ -487,7 +539,7 @@ export default function Home() {
                     💸 Sell Shares - Choose Your Method
                   </h2>
                   <p className="text-red-600 text-sm mb-4">
-                    Choose between contract calls, ethers signed transactions, ethers realtime API, or Wagmi signed send for selling shares
+                    Choose between contract calls, ethers signed transactions, ethers realtime API, Wagmi signed send, or Privy native signing for selling shares
                   </p>
 
                   {/* Method Selection */}
@@ -495,7 +547,7 @@ export default function Home() {
                     <label className="block text-sm font-semibold text-red-800 mb-3">
                       Transaction Method
                     </label>
-                    <div className="grid gap-3 md:grid-cols-4">
+                    <div className="grid gap-3 md:grid-cols-5">
                       <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
                         <input
                           type="radio"
@@ -552,6 +604,20 @@ export default function Home() {
                           <div className="text-sm text-red-600">Uses Wagmi wallet integration</div>
                         </div>
                       </label>
+                      <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="sellMethod"
+                          value="privy-native"
+                          checked={sellMethod === 'privy-native'}
+                          onChange={(e) => setSellMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-red-600"
+                        />
+                        <div>
+                          <div className="font-medium text-red-800">🎯 Privy Native Sign</div>
+                          <div className="text-sm text-red-600">Uses Privy native signTransaction</div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
@@ -584,7 +650,7 @@ export default function Home() {
 
                   <button
                     onClick={handleSellShares}
-                    disabled={isSellLoading || (sellMethod !== 'privy' && !isConnected)}
+                    disabled={isSellLoading || ((sellMethod !== 'privy' && sellMethod !== 'privy-native') && !isConnected)}
                     className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
                   >
                     {isSellLoading ? '⏳ Processing...' : `💸 Sell Shares via ${getMethodDisplayName(sellMethod)}`}
@@ -621,9 +687,9 @@ export default function Home() {
                     </div>
                   )}
 
-                  {((sellMethod !== 'privy' && !isConnected) || (sellMethod === 'privy' && !address)) && (
+                  {(((sellMethod !== 'privy' && sellMethod !== 'privy-native') && !isConnected) || ((sellMethod === 'privy' || sellMethod === 'privy-native') && !address)) && (
                     <p className="text-yellow-600 text-sm mt-2">
-                      ⚠️ {sellMethod === 'privy' ? 'Please connect your Wagmi wallet' : 'Please connect your wallet'} to use this feature
+                      ⚠️ {(sellMethod === 'privy' || sellMethod === 'privy-native') ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
                     </p>
                   )}
                 </div>
