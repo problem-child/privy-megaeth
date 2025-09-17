@@ -79,7 +79,7 @@ export default function Home() {
 
     // For Privy method, we need the user's address, for others we need connector client
     if (buyMethod === 'privy' && !address) {
-      setTxResult({ success: false, error: 'User address not available for Privy method' });
+      setTxResult({ success: false, error: 'User address not available for Wagmi method' });
       return;
     } else if (buyMethod !== 'privy' && !connectorClient) {
       setTxResult({ success: false, error: 'Please fill in all fields' });
@@ -91,7 +91,7 @@ export default function Home() {
 
     try {
       if (buyMethod === 'privy') {
-        // Use Privy method with user address
+        // Use Wagmi method with user address
         const result = await buyShares(
           address as `0x${string}`,
           parseInt(playerId),
@@ -138,7 +138,7 @@ export default function Home() {
 
     // For Privy method, we need the user's address, for others we need connector client
     if (sellMethod === 'privy' && !address) {
-      setSellTxResult({ success: false, error: 'User address not available for Privy method' });
+      setSellTxResult({ success: false, error: 'User address not available for Wagmi method' });
       return;
     } else if (sellMethod !== 'privy' && !connectorClient) {
       setSellTxResult({ success: false, error: 'Please fill in all fields' });
@@ -150,7 +150,7 @@ export default function Home() {
 
     try {
       if (sellMethod === 'privy') {
-        // Use Privy method with user address
+        // Use Wagmi method with user address
         const result = await sellShares(
           address as `0x${string}`,
           parseInt(sellPlayerId),
@@ -192,10 +192,10 @@ export default function Home() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Privy + MegaETH Demo
+              Wagmi + MegaETH Demo
             </h1>
             <p className="text-gray-600">
-              Complete wallet and user information dashboard
+              Complete wallet and transaction method dashboard
             </p>
           </div>
 
@@ -326,7 +326,7 @@ export default function Home() {
                     🛒 Buy Shares - Choose Your Method
                   </h2>
                   <p className="text-green-600 text-sm mb-4">
-                    Choose between contract calls, raw transactions, realtime API, or Privy wallet integration for buying shares
+                    Choose between contract calls, ethers signed transactions, ethers realtime API, or Wagmi signed send for buying shares
                   </p>
 
                   {/* Method Selection */}
@@ -359,8 +359,8 @@ export default function Home() {
                           className="mr-3 text-green-600"
                         />
                         <div>
-                          <div className="font-medium text-green-800">Raw Transaction</div>
-                          <div className="text-sm text-green-600">Sign and broadcast raw transaction</div>
+                          <div className="font-medium text-green-800">Ethers Signed</div>
+                          <div className="text-sm text-green-600">Sign and broadcast ethers transaction</div>
                         </div>
                       </label>
                       <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
@@ -373,8 +373,8 @@ export default function Home() {
                           className="mr-3 text-green-600"
                         />
                         <div>
-                          <div className="font-medium text-green-800">⚡ Realtime</div>
-                          <div className="text-sm text-green-600">Ultra-fast MegaETH realtime API</div>
+                          <div className="font-medium text-green-800">⚡ Ethers Realtime</div>
+                          <div className="text-sm text-green-600">Ultra-fast ethers realtime API</div>
                         </div>
                       </label>
                       <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
@@ -387,8 +387,8 @@ export default function Home() {
                           className="mr-3 text-green-600"
                         />
                         <div>
-                          <div className="font-medium text-green-800">🔐 Privy Wallet</div>
-                          <div className="text-sm text-green-600">Uses Privy wallet integration</div>
+                          <div className="font-medium text-green-800">🔐 Wagmi Signed Send</div>
+                          <div className="text-sm text-green-600">Uses Wagmi wallet integration</div>
                         </div>
                       </label>
                     </div>
@@ -474,7 +474,7 @@ export default function Home() {
 
                   {((buyMethod !== 'privy' && !isConnected) || (buyMethod === 'privy' && !address)) && (
                     <p className="text-yellow-600 text-sm mt-2">
-                      ⚠️ {buyMethod === 'privy' ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
+                      ⚠️ {buyMethod === 'privy' ? 'Please connect your Wagmi wallet' : 'Please connect your wallet'} to use this feature
                     </p>
                   )}
                 </div>
@@ -487,7 +487,7 @@ export default function Home() {
                     💸 Sell Shares - Choose Your Method
                   </h2>
                   <p className="text-red-600 text-sm mb-4">
-                    Choose between contract calls, raw transactions, realtime API, or Privy wallet integration for selling shares
+                    Choose between contract calls, ethers signed transactions, ethers realtime API, or Wagmi signed send for selling shares
                   </p>
 
                   {/* Method Selection */}
@@ -520,8 +520,8 @@ export default function Home() {
                           className="mr-3 text-red-600"
                         />
                         <div>
-                          <div className="font-medium text-red-800">Raw Transaction</div>
-                          <div className="text-sm text-red-600">Sign and broadcast raw transaction</div>
+                          <div className="font-medium text-red-800">Ethers Signed</div>
+                          <div className="text-sm text-red-600">Sign and broadcast ethers transaction</div>
                         </div>
                       </label>
                       <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
@@ -534,8 +534,8 @@ export default function Home() {
                           className="mr-3 text-red-600"
                         />
                         <div>
-                          <div className="font-medium text-red-800">⚡ Realtime</div>
-                          <div className="text-sm text-red-600">Ultra-fast MegaETH realtime API</div>
+                          <div className="font-medium text-red-800">⚡ Ethers Realtime</div>
+                          <div className="text-sm text-red-600">Ultra-fast ethers realtime API</div>
                         </div>
                       </label>
                       <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
@@ -548,8 +548,8 @@ export default function Home() {
                           className="mr-3 text-red-600"
                         />
                         <div>
-                          <div className="font-medium text-red-800">🔐 Privy Wallet</div>
-                          <div className="text-sm text-red-600">Uses Privy wallet integration</div>
+                          <div className="font-medium text-red-800">🔐 Wagmi Signed Send</div>
+                          <div className="text-sm text-red-600">Uses Wagmi wallet integration</div>
                         </div>
                       </label>
                     </div>
@@ -623,7 +623,7 @@ export default function Home() {
 
                   {((sellMethod !== 'privy' && !isConnected) || (sellMethod === 'privy' && !address)) && (
                     <p className="text-yellow-600 text-sm mt-2">
-                      ⚠️ {sellMethod === 'privy' ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
+                      ⚠️ {sellMethod === 'privy' ? 'Please connect your Wagmi wallet' : 'Please connect your wallet'} to use this feature
                     </p>
                   )}
                 </div>

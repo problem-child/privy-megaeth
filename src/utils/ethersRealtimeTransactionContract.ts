@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { TOPSTRIKE_CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contracts';
 
-export async function buySharesWithRealtimeTransaction(
+export async function buySharesWithEthersRealtime(
   signer: ethers.Signer,
   playerId: number,
   amount: number,
@@ -110,7 +110,7 @@ export async function buySharesWithRealtimeTransaction(
 
     return { success: true, txHash: receipt.transactionHash, receipt, method: 'realtime' as const };
   } catch (error) {
-    console.error('Error buying shares with realtime transaction:', error);
+    console.error('Error buying shares with ethers realtime transaction:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -119,7 +119,7 @@ export async function buySharesWithRealtimeTransaction(
   }
 }
 
-export async function sellSharesWithRealtimeTransaction(
+export async function sellSharesWithEthersRealtime(
   signer: ethers.Signer,
   playerId: number,
   amount: number
@@ -226,7 +226,7 @@ export async function sellSharesWithRealtimeTransaction(
 
     return { success: true, txHash: receipt.transactionHash, receipt, method: 'realtime' as const };
   } catch (error) {
-    console.error('Error selling shares with realtime transaction:', error);
+    console.error('Error selling shares with ethers realtime transaction:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

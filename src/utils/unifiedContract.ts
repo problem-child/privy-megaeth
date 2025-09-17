@@ -1,8 +1,8 @@
 import { ethers } from 'ethers';
 import { buySharesWithEthers, sellSharesWithEthers } from './ethersContract';
-import { buySharesWithRawTransaction, sellSharesWithRawTransaction } from './rawTransactionContract';
-import { buySharesWithRealtimeTransaction, sellSharesWithRealtimeTransaction } from './realtimeTransactionContract';
-import { buySharesWithPrivy, sellSharesWithPrivy } from './privyTransactionContract';
+import { buySharesWithSignedTransaction, sellSharesWithSignedTransaction } from './ethersSignedTransactionContract';
+import { buySharesWithEthersRealtime, sellSharesWithEthersRealtime } from './ethersRealtimeTransactionContract';
+import { buySharesWithWagmi, sellSharesWithWagmi } from './wagmiSignedSendTransactionContract';
 
 export type TransactionMethod = 'contract' | 'raw' | 'realtime' | 'privy';
 
@@ -25,17 +25,17 @@ export async function buyShares(
     if (typeof signerOrAddress === 'string') {
       throw new Error('Raw method requires an ethers.Signer, not an address string');
     }
-    return await buySharesWithRawTransaction(signerOrAddress, playerId, amount, value);
+    return await buySharesWithSignedTransaction(signerOrAddress, playerId, amount, value);
   } else if (method === 'realtime') {
     if (typeof signerOrAddress === 'string') {
       throw new Error('Realtime method requires an ethers.Signer, not an address string');
     }
-    return await buySharesWithRealtimeTransaction(signerOrAddress, playerId, amount, value);
+    return await buySharesWithEthersRealtime(signerOrAddress, playerId, amount, value);
   } else if (method === 'privy') {
     if (typeof signerOrAddress !== 'string') {
       throw new Error('Privy method requires a user address string, not an ethers.Signer');
     }
-    return await buySharesWithPrivy(signerOrAddress, playerId, amount, value);
+    return await buySharesWithWagmi(signerOrAddress, playerId, amount, value);
   } else {
     if (typeof signerOrAddress === 'string') {
       throw new Error('Contract method requires an ethers.Signer, not an address string');
@@ -55,17 +55,17 @@ export async function sellShares(
     if (typeof signerOrAddress === 'string') {
       throw new Error('Raw method requires an ethers.Signer, not an address string');
     }
-    return await sellSharesWithRawTransaction(signerOrAddress, playerId, amount);
+    return await sellSharesWithSignedTransaction(signerOrAddress, playerId, amount);
   } else if (method === 'realtime') {
     if (typeof signerOrAddress === 'string') {
       throw new Error('Realtime method requires an ethers.Signer, not an address string');
     }
-    return await sellSharesWithRealtimeTransaction(signerOrAddress, playerId, amount);
+    return await sellSharesWithEthersRealtime(signerOrAddress, playerId, amount);
   } else if (method === 'privy') {
     if (typeof signerOrAddress !== 'string') {
       throw new Error('Privy method requires a user address string, not an ethers.Signer');
     }
-    return await sellSharesWithPrivy(signerOrAddress, playerId, amount);
+    return await sellSharesWithWagmi(signerOrAddress, playerId, amount);
   } else {
     if (typeof signerOrAddress === 'string') {
       throw new Error('Contract method requires an ethers.Signer, not an address string');
@@ -81,11 +81,11 @@ export function getMethodDisplayName(method: TransactionMethod): string {
     case 'contract':
       return 'Contract Call';
     case 'raw':
-      return 'Raw Transaction';
+      return 'Ethers Signed';
     case 'realtime':
-      return 'Realtime Transaction';
+      return 'Ethers Realtime';
     case 'privy':
-      return 'Privy Wallet';
+      return 'Wagmi Signed Send';
     default:
       return 'Unknown Method';
   }
@@ -97,11 +97,11 @@ export function getMethodDescription(method: TransactionMethod): string {
     case 'contract':
       return 'Uses ethers.js contract abstraction for easier development';
     case 'raw':
-      return 'Uses raw transaction signing and broadcasting for lower-level control';
+      return 'Uses ethers signed transaction for lower-level control';
     case 'realtime':
-      return 'Uses MegaETH realtime API for ultra-fast transaction execution and immediate receipts';
+      return 'Uses ethers signing plus realtime send for ultra-fast transaction execution and immediate receipts';
     case 'privy':
-      return 'Uses Privy wallet integration for seamless transaction signing and sending';
+      return 'Uses Wagmi wallet integration for seamless transaction signing and sending';
     default:
       return 'Unknown transaction method';
   }

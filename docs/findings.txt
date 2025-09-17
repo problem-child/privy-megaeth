@@ -19,8 +19,8 @@ https://auth.privy.io/api/v1/user_signers/authenticate
 
 https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
     {"chain_type":"ethereum","method":"eth_signTransaction",
-    "params":{"transaction":{"
-    from":"0x4DB5853f6EefEd3E93fCFcFd4A41745412c29626",
+    "params":{"transaction":{
+    "from":"0x4DB5853f6EefEd3E93fCFcFd4A41745412c29626",
     "to":"0x4d7f960195b322f6225115d9f34e3830e6f36bb7",
     "nonce":"0x9",
     "chain_id":"0x18c6",
@@ -30,7 +30,9 @@ https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
     "gas_limit":"0x2508e",
     "gas_price":"0x2508e",
     "max_fee_per_gas":"0x124f80",
-    "max_priority_fee_per_gas":"0x0"}}}
+    "max_priority_fee_per_gas":"0x0"
+    }
+    }}
 
 ^^^^ Note correct gas settings sent
 
@@ -56,3 +58,7 @@ https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
     "gas_price":"0x30786634323430"}}}
 
 ^^^ Note LARGE value + gas settings. Different transaction type
+
+========
+
+if i try

@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { TOPSTRIKE_CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contracts';
 
-export async function buySharesWithRawTransaction(
+export async function buySharesWithSignedTransaction(
   signer: ethers.Signer,
   playerId: number,
   amount: number,
@@ -112,7 +112,7 @@ export async function buySharesWithRawTransaction(
 
     return { success: true, txHash: txResponse.hash, receipt, method: 'raw' as const };
   } catch (error) {
-    console.error('Error buying shares with raw transaction:', error);
+    console.error('Error buying shares with signed transaction:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -121,7 +121,7 @@ export async function buySharesWithRawTransaction(
   }
 }
 
-export async function sellSharesWithRawTransaction(
+export async function sellSharesWithSignedTransaction(
   signer: ethers.Signer,
   playerId: number,
   amount: number
@@ -230,7 +230,7 @@ export async function sellSharesWithRawTransaction(
 
     return { success: true, txHash: txResponse.hash, receipt, method: 'raw' as const };
   } catch (error) {
-    console.error('Error selling shares with raw transaction:', error);
+    console.error('Error selling shares with signed transaction:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
