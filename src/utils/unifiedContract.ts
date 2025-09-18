@@ -4,8 +4,9 @@ import { buySharesWithSignedTransaction, sellSharesWithSignedTransaction } from 
 import { buySharesWithEthersRealtime, sellSharesWithEthersRealtime } from './ethersRealtimeTransactionContract';
 import { buySharesWithWagmi, sellSharesWithWagmi } from './wagmiSignedSendTransactionContract';
 import { buySharesWithPrivyNative, sellSharesWithPrivyNative } from './privyNativeSignAndSend';
+import { buySharesWithPrivyNativeRealtime, sellSharesWithPrivyNativeRealtime } from './privyNativeSignAndRealtimeSend';
 
-export type TransactionMethod = 'contract' | 'raw' | 'realtime' | 'privy' | 'privy-native';
+export type TransactionMethod = 'contract' | 'raw' | 'realtime' | 'privy' | 'privy-native' | 'privy-native-realtime';
 
 export interface TransactionResult {
   success: boolean;
@@ -49,6 +50,21 @@ export async function buyShares(
       throw new Error('Privy native method requires signTransaction function and provider');
     }
     return await buySharesWithPrivyNative(
+      privyHelpers.signTransaction,
+      privyHelpers.provider,
+      signerOrAddress,
+      playerId,
+      amount,
+      value
+    );
+  } else if (method === 'privy-native-realtime') {
+    if (typeof signerOrAddress !== 'string') {
+      throw new Error('Privy native realtime method requires a user address string, not an ethers.Signer');
+    }
+    if (!privyHelpers) {
+      throw new Error('Privy native realtime method requires signTransaction function and provider');
+    }
+    return await buySharesWithPrivyNativeRealtime(
       privyHelpers.signTransaction,
       privyHelpers.provider,
       signerOrAddress,
@@ -104,6 +120,20 @@ export async function sellShares(
       playerId,
       amount
     );
+  } else if (method === 'privy-native-realtime') {
+    if (typeof signerOrAddress !== 'string') {
+      throw new Error('Privy native realtime method requires a user address string, not an ethers.Signer');
+    }
+    if (!privyHelpers) {
+      throw new Error('Privy native realtime method requires signTransaction function and provider');
+    }
+    return await sellSharesWithPrivyNativeRealtime(
+      privyHelpers.signTransaction,
+      privyHelpers.provider,
+      signerOrAddress,
+      playerId,
+      amount
+    );
   } else {
     if (typeof signerOrAddress === 'string') {
       throw new Error('Contract method requires an ethers.Signer, not an address string');
@@ -126,6 +156,8 @@ export function getMethodDisplayName(method: TransactionMethod): string {
       return 'Wagmi Signed Send';
     case 'privy-native':
       return 'Privy Native Sign';
+    case 'privy-native-realtime':
+      return 'Privy Native Realtime';
     default:
       return 'Unknown Method';
   }
@@ -144,6 +176,8 @@ export function getMethodDescription(method: TransactionMethod): string {
       return 'Uses Wagmi wallet integration for seamless transaction signing and sending';
     case 'privy-native':
       return 'Uses Privy native signTransaction hook for transaction signing';
+    case 'privy-native-realtime':
+      return 'Uses Privy native signTransaction with realtime send for ultra-fast execution';
     default:
       return 'Unknown transaction method';
   }

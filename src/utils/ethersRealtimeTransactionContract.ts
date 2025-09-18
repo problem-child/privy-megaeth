@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { TOPSTRIKE_CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contracts';
+import { logObjectTable, logTransactionTable } from './objectTableLogger';
 
 export async function buySharesWithEthersRealtime(
   signer: ethers.Signer,
@@ -47,6 +48,7 @@ export async function buySharesWithEthersRealtime(
     };
 
     console.log('Realtime raw transaction object:', rawTransaction);
+    logTransactionTable(rawTransaction, 'Raw Buy Transaction Object');
 
     // Parse and log detailed gas settings
     console.log('=== REALTIME TRANSACTION PARSING & GAS SETTINGS ===');
@@ -90,23 +92,41 @@ export async function buySharesWithEthersRealtime(
     // Parse the signed transaction
     const parsedSignedTx = ethers.Transaction.from(signedTransaction);
     console.log('=== SIGNED REALTIME TRANSACTION PARSING ===');
-    console.log('Parsed Signed Transaction:');
-    console.log('  - Hash:', parsedSignedTx.hash);
-    console.log('  - From:', parsedSignedTx.from);
-    console.log('  - To:', parsedSignedTx.to);
-    console.log('  - Value:', parsedSignedTx.value.toString());
-    console.log('  - Gas Limit:', parsedSignedTx.gasLimit.toString());
-    console.log('  - Gas Price:', parsedSignedTx.gasPrice?.toString() || 'undefined');
-    console.log('  - Nonce:', parsedSignedTx.nonce);
-    console.log('  - Type:', parsedSignedTx.type);
-    console.log('  - Chain ID:', parsedSignedTx.chainId.toString());
-    console.log('===================================');
+
+    // Extract key attributes from parsed signed transaction
+    const parsedTxAttributes = {
+      hash: parsedSignedTx.hash,
+      to: parsedSignedTx.to,
+      from: parsedSignedTx.from,
+      value: parsedSignedTx.value.toString(),
+      valueEth: ethers.formatEther(parsedSignedTx.value),
+      gasLimit: parsedSignedTx.gasLimit.toString(),
+      gasPrice: parsedSignedTx.gasPrice?.toString() || 'null',
+      gasPriceGwei: parsedSignedTx.gasPrice ? ethers.formatUnits(parsedSignedTx.gasPrice, 'gwei') : 'null',
+      nonce: parsedSignedTx.nonce,
+      data: parsedSignedTx.data,
+      dataLength: parsedSignedTx.data.length,
+      functionSignature: parsedSignedTx.data.slice(0, 10),
+      chainId: parsedSignedTx.chainId.toString(),
+      type: parsedSignedTx.type,
+      signature: {
+        r: parsedSignedTx.signature?.r || 'null',
+        s: parsedSignedTx.signature?.s || 'null',
+        v: parsedSignedTx.signature?.v?.toString() || 'null'
+      },
+      serialized: parsedSignedTx.serialized,
+      serializedLength: parsedSignedTx.serialized.length
+    };
+
+    console.log('=== SIGNED REALTIME TRANSACTION ATTRIBUTES ===');
+    logObjectTable(parsedTxAttributes, 'Parsed Signed Transaction Attributes');
 
     // Send the raw transaction using realtime_sendRawTransaction
     console.log('Sending transaction via realtime_sendRawTransaction...');
     const jsonRpcProvider = provider as ethers.JsonRpcProvider;
     const receipt = await jsonRpcProvider.send('realtime_sendRawTransaction', [signedTransaction]);
     console.log('Realtime transaction receipt:', receipt);
+    logObjectTable(receipt, 'Realtime Transaction Receipt');
 
     return { success: true, txHash: receipt.transactionHash, receipt, method: 'realtime' as const };
   } catch (error) {
@@ -163,6 +183,7 @@ export async function sellSharesWithEthersRealtime(
     };
 
     console.log('Realtime raw sell transaction object:', rawTransaction);
+    logTransactionTable(rawTransaction, 'Raw Sell Transaction Object');
 
     // Parse and log detailed gas settings for sell transaction
     console.log('=== REALTIME SELL TRANSACTION PARSING & GAS SETTINGS ===');
@@ -205,24 +226,47 @@ export async function sellSharesWithEthersRealtime(
 
     // Parse the signed transaction
     const parsedSignedTx = ethers.Transaction.from(signedTransaction);
+
+
+
     console.log('=== SIGNED REALTIME SELL TRANSACTION PARSING ===');
-    console.log('Parsed Signed Transaction:');
-    console.log('  - Hash:', parsedSignedTx.hash);
-    console.log('  - From:', parsedSignedTx.from);
-    console.log('  - To:', parsedSignedTx.to);
-    console.log('  - Value:', parsedSignedTx.value.toString());
-    console.log('  - Gas Limit:', parsedSignedTx.gasLimit.toString());
-    console.log('  - Gas Price:', parsedSignedTx.gasPrice?.toString() || 'undefined');
-    console.log('  - Nonce:', parsedSignedTx.nonce);
-    console.log('  - Type:', parsedSignedTx.type);
-    console.log('  - Chain ID:', parsedSignedTx.chainId.toString());
-    console.log('=========================================');
+    logTransactionTable(parsedSignedTx, 'Parsed Signed Sell Transaction');
+
+    // Extract key attributes from parsed signed transaction
+    const parsedTxAttributes = {
+      hash: parsedSignedTx.hash,
+      to: parsedSignedTx.to,
+      from: parsedSignedTx.from,
+      value: parsedSignedTx.value.toString(),
+      valueEth: ethers.formatEther(parsedSignedTx.value),
+      gasLimit: parsedSignedTx.gasLimit.toString(),
+      gasPrice: parsedSignedTx.gasPrice?.toString() || 'null',
+      gasPriceGwei: parsedSignedTx.gasPrice ? ethers.formatUnits(parsedSignedTx.gasPrice, 'gwei') : 'null',
+      nonce: parsedSignedTx.nonce,
+      data: parsedSignedTx.data,
+      dataLength: parsedSignedTx.data.length,
+      functionSignature: parsedSignedTx.data.slice(0, 10),
+      chainId: parsedSignedTx.chainId.toString(),
+      type: parsedSignedTx.type,
+      signature: {
+        r: parsedSignedTx.signature?.r || 'null',
+        s: parsedSignedTx.signature?.s || 'null',
+        v: parsedSignedTx.signature?.v?.toString() || 'null'
+      },
+      serialized: parsedSignedTx.serialized,
+      serializedLength: parsedSignedTx.serialized.length
+    };
+
+    console.log('=== SIGNED REALTIME SELL TRANSACTION ATTRIBUTES ===');
+    logObjectTable(parsedTxAttributes, 'Parsed Signed Sell Transaction Attributes');
+    logTransactionTable(parsedSignedTx, 'Full Parsed Signed Sell Transaction Object');
 
     // Send the raw transaction using realtime_sendRawTransaction
     console.log('Sending sell transaction via realtime_sendRawTransaction...');
     const jsonRpcProvider = provider as ethers.JsonRpcProvider;
     const receipt = await jsonRpcProvider.send('realtime_sendRawTransaction', [signedTransaction]);
     console.log('Realtime sell transaction receipt:', receipt);
+    logObjectTable(receipt, 'Realtime Sell Transaction Receipt');
 
     return { success: true, txHash: receipt.transactionHash, receipt, method: 'realtime' as const };
   } catch (error) {

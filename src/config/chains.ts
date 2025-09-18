@@ -12,8 +12,8 @@ export const megaeth = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ['https://carrot.megaeth.com/rpc'],
-      webSocket: ['wss://carrot.megaeth.com/ws'],
+      http: [process.env.NEXT_PUBLIC_MEGAETH_RPC || 'https://carrot.megaeth.com/rpc'],
+      webSocket: [process.env.NEXT_PUBLIC_MEGAETH_WSS || 'wss://carrot.megaeth.com/ws'],
     },
   },
   blockExplorers: {

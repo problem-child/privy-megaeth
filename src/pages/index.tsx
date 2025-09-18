@@ -18,16 +18,16 @@ export default function Home() {
   const { connectors, connect } = useConnect();
 
   // BuyShares form state
-  const [playerId, setPlayerId] = useState('');
-  const [shareAmount, setShareAmount] = useState('');
-  const [ethValue, setEthValue] = useState('');
+  const [playerId, setPlayerId] = useState('0');
+  const [shareAmount, setShareAmount] = useState('1');
+  const [ethValue, setEthValue] = useState('0.3');
   const [buyMethod, setBuyMethod] = useState<TransactionMethod>('contract');
   const [isLoading, setIsLoading] = useState(false);
   const [txResult, setTxResult] = useState<{success: boolean, txHash?: string, error?: string, method?: string} | null>(null);
 
   // SellShares form state
-  const [sellPlayerId, setSellPlayerId] = useState('');
-  const [sellShareAmount, setSellShareAmount] = useState('');
+  const [sellPlayerId, setSellPlayerId] = useState('0');
+  const [sellShareAmount, setSellShareAmount] = useState('1');
   const [sellMethod, setSellMethod] = useState<TransactionMethod>('contract');
   const [isSellLoading, setIsSellLoading] = useState(false);
   const [sellTxResult, setSellTxResult] = useState<{success: boolean, txHash?: string, error?: string, method?: string} | null>(null);
@@ -547,7 +547,7 @@ export default function Home() {
                     <label className="block text-sm font-semibold text-red-800 mb-3">
                       Transaction Method
                     </label>
-                    <div className="grid gap-3 md:grid-cols-5">
+                    <div className="grid gap-3 md:grid-cols-6">
                       <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
                         <input
                           type="radio"
@@ -618,6 +618,20 @@ export default function Home() {
                           <div className="text-sm text-red-600">Uses Privy native signTransaction</div>
                         </div>
                       </label>
+                      <label className="flex items-center p-3 border-2 border-red-300 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="sellMethod"
+                          value="privy-native-realtime"
+                          checked={sellMethod === 'privy-native-realtime'}
+                          onChange={(e) => setSellMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-red-600"
+                        />
+                        <div>
+                          <div className="font-medium text-red-800">🚀 Privy Native Realtime</div>
+                          <div className="text-sm text-red-600">Privy sign + realtime send</div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
@@ -650,7 +664,7 @@ export default function Home() {
 
                   <button
                     onClick={handleSellShares}
-                    disabled={isSellLoading || ((sellMethod !== 'privy' && sellMethod !== 'privy-native') && !isConnected)}
+                    disabled={isSellLoading || ((sellMethod !== 'privy' && sellMethod !== 'privy-native' && sellMethod !== 'privy-native-realtime') && !isConnected)}
                     className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
                   >
                     {isSellLoading ? '⏳ Processing...' : `💸 Sell Shares via ${getMethodDisplayName(sellMethod)}`}
@@ -687,9 +701,9 @@ export default function Home() {
                     </div>
                   )}
 
-                  {(((sellMethod !== 'privy' && sellMethod !== 'privy-native') && !isConnected) || ((sellMethod === 'privy' || sellMethod === 'privy-native') && !address)) && (
+                  {(((sellMethod !== 'privy' && sellMethod !== 'privy-native' && sellMethod !== 'privy-native-realtime') && !isConnected) || ((sellMethod === 'privy' || sellMethod === 'privy-native' || sellMethod === 'privy-native-realtime') && !address)) && (
                     <p className="text-yellow-600 text-sm mt-2">
-                      ⚠️ {(sellMethod === 'privy' || sellMethod === 'privy-native') ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
+                      ⚠️ {(sellMethod === 'privy' || sellMethod === 'privy-native' || sellMethod === 'privy-native-realtime') ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
                     </p>
                   )}
                 </div>

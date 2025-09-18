@@ -1,64 +1,83 @@
-Behaviour seems to change based on:
+I am attempting to use Privy embedded wallets to megaeth. Specifically I want to control the confirmation aspect and allow promptless signing and sending via theit ultra fast realtime_sendRawTransaction calls.
+In order to do this, I need to sign and then send using this special method (ie, realtime_sendRawTransaction rather than eth_sendRawTransaction)
+The send doesn't cause me an issue. I am actually having a problem with the signing step, and specifically, only when the follwoing is activated:
 
-    Disable confirmation modals (react-auth only)
-    Turn off the default UIs that prompt the user to review before sending transactions and signing messages
+        `Disable confirmation modals (react-auth only)
+        Turn off the default UIs that prompt the user to review before sending transactions and signing messages`
 
-rawTransactionContract successfully signs with confirms enabled
-If disabled, the gas settings are messed up during signing
+I've put together a minimal example app that calls a buyShare function on my own contract
+Code is here: https://github.com/problem-child/privy-megaeth
+There are a number of different approachs to performing a buy transaction here: https://github.com/problem-child/privy-megaeth/tree/main/src/utils
 
+What I am seeing is that when I manually sign the transaction, I run into issues, but only when the Privy confirmations are disabled.
+The ethers contract.buyShares approach works with confirmations disabled, but that is not useful to me as I need to explicity sign and send to realtime_sendRawTransaction
 
-When confirm enabled:
+All of approaches work fine when confirmations are enabled, but when disabled, the gas settings are messed up during signing and the transaction is rejected by the chain.
 
-https://auth.privy.io/api/v1/analytics_events
-    {"event_name":"embedded_wallet_iframe_user_signer_sign_started","client_id":"eb451bc0-34b4-4c69-970f-67a7acd747e3","payload":{"iframeClientType":"web","clientTimestamp":"2025-09-16T22:56:26.269Z"}}
+Focussing on this one for now:
+https://github.com/problem-child/privy-megaeth/blob/main/src/utils/ethersSignedTransactionContract.ts
 
+When confirm enabled <see screenshot>, I see the following calls in the network tab:
 
-https://auth.privy.io/api/v1/user_signers/authenticate
-    {"encryption_type":"HPKE","recipient_public_key":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcMhjxJrsA3ai/EoA8NsF7bof+6taCQfzjbJQHj/riTYplRAtY9K3TIJAsKCHUWSMbeepNplZjEyuB/IVbKaGXw==","user_jwt":""}
-
-
-https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
-    {"chain_type":"ethereum","method":"eth_signTransaction",
-    "params":{"transaction":{
-    "from":"0x4DB5853f6EefEd3E93fCFcFd4A41745412c29626",
-    "to":"0x4d7f960195b322f6225115d9f34e3830e6f36bb7",
-    "nonce":"0x9",
-    "chain_id":"0x18c6",
-    "data":"0xbeebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
-    "value":"0x2c68af0bb140000",
-    "type":2,
-    "gas_limit":"0x2508e",
-    "gas_price":"0x2508e",
-    "max_fee_per_gas":"0x124f80",
-    "max_priority_fee_per_gas":"0x0"
-    }
-    }}
-
-^^^^ Note correct gas settings sent
+    https://auth.privy.io/api/v1/analytics_events
+        {"event_name":"embedded_wallet_iframe_user_signer_sign_started","client_id":"eb451bc0-34b4-4c69-970f-67a7acd747e3","payload":{"iframeClientType":"web","clientTimestamp":"2025-09-16T22:56:26.269Z"}}
 
 
-Now, disable confirm using privy dashboard, and the same code / process...
+    https://auth.privy.io/api/v1/user_signers/authenticate
+        {"encryption_type":"HPKE","recipient_public_key":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcMhjxJrsA3ai/EoA8NsF7bof+6taCQfzjbJQHj/riTYplRAtY9K3TIJAsKCHUWSMbeepNplZjEyuB/IVbKaGXw==","user_jwt":""}
 
-https://auth.privy.io/api/v1/analytics_events
-    {"event_name":"embedded_wallet_iframe_user_signer_sign_started","client_id":"eb451bc0-34b4-4c69-970f-67a7acd747e3","payload":{"iframeClientType":"web","clientTimestamp":"2025-09-16T22:59:32.978Z"}}
+    https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
+        {"chain_type":"ethereum","method":"eth_signTransaction",
+        "params":{"transaction":{
+        "from":"0x4DB5853f6EefEd3E93fCFcFd4A41745412c29626",
+        "to":"0x4d7f960195b322f6225115d9f34e3830e6f36bb7",
+        "nonce":"0x9",
+        "chain_id":"0x18c6",
+        "data":"0xbeebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+        "value":"0x2c68af0bb140000",
+        "type":2,
+        "gas_limit":"0x2508e",
+        "gas_price":"0x2508e",
+        "max_fee_per_gas":"0x124f80",
+        "max_priority_fee_per_gas":"0x0"
+        }
+        }}
 
-https://auth.privy.io/api/v1/user_signers/authenticate
-    {"encryption_type":"HPKE","recipient_public_key":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMs+kVMDOMZvbKVYalutrcr20ZT0vFgI7Hzy1Q8nxVc7q340vrNS84W7xZmla+tRnu57bx6WdScBDQXIC1tz5Ow==","user_jwt":""}
+Note that fields used for the gas, and the small value are all correct. Here, the use if promted to approve the transcation (something I want to skip), and the transaction is signed, sent and processed.
 
-https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
-    {"chain_type":"ethereum","method":"eth_signTransaction",
-    "params":{"transaction":
-    {"from":"0x4db5853f6eefed3e93fcfcfd4a41745412c29626",
-    "to":"0x4d7f960195b322f6225115d9f34e3830e6f36bb7",
-    "nonce":"0x307861",
-    "chain_id":"0x18c6",
-    "data":"0xbeebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
-    "value":"0x3078326336386166306262313430303030",
-    "gas_limit":"0x30783235303865",
-    "gas_price":"0x30786634323430"}}}
 
-^^^ Note LARGE value + gas settings. Different transaction type
+Now, disable confirm using privy dashboard, and the same code and steps lead to...
 
-========
+    https://auth.privy.io/api/v1/analytics_events
+        {"event_name":"embedded_wallet_iframe_user_signer_sign_started","client_id":"eb451bc0-34b4-4c69-970f-67a7acd747e3","payload":{"iframeClientType":"web","clientTimestamp":"2025-09-16T22:59:32.978Z"}}
 
-if i try
+    https://auth.privy.io/api/v1/user_signers/authenticate
+        {"encryption_type":"HPKE","recipient_public_key":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMs+kVMDOMZvbKVYalutrcr20ZT0vFgI7Hzy1Q8nxVc7q340vrNS84W7xZmla+tRnu57bx6WdScBDQXIC1tz5Ow==","user_jwt":""}
+
+    https://auth.privy.io/api/v1/wallets/b2xdomrvuz3r85a3xa8a57ip/rpc
+        {"chain_type":"ethereum","method":"eth_signTransaction",
+        "params":{"transaction":
+        {"from":"0x4db5853f6eefed3e93fcfcfd4a41745412c29626",
+        "to":"0x4d7f960195b322f6225115d9f34e3830e6f36bb7",
+        "nonce":"0x307861",
+        "chain_id":"0x18c6",
+        "data":"0xbeebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+        "value":"0x3078326336386166306262313430303030",
+        "gas_limit":"0x30783235303865",
+        "gas_price":"0x30786634323430"}}}
+
+Note the type attribute is missing, and the gas settings and value are all (way too big).
+The transaction is rejected by the chain with an error exceeding the block gas limit
+
+If it reenable to confirms, the same code works fine again.
+
+So issue seems to be specifically related to the signing step when confirms are disabled. Is there some back end config that is needed to make this work? I've read the docs but dont seems to see anything. Any halep graciously received.
+
+Thanks!
+
+=====
+
+On some of the other approaches, I see
+
+
+the max_fee_per_gas and max_priority_fee_per_gas fields are also missing when confirm is disabled.
