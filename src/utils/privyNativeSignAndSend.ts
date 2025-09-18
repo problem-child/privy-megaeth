@@ -47,6 +47,8 @@ export async function buySharesWithPrivyNative(
       gasPrice: gasPrice.gasPrice,
       nonce: nonce,
       data: data,
+      maxFeePerGas: BigInt(1200000), // Hardcode to 1,200,000 wei
+      maxPriorityFeePerGas: BigInt(0), // Optional: set to 0 or a small value like 1000000n
     };
 
     console.log('Privy Native buy transaction object:', transaction);

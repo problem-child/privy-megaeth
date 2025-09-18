@@ -1,0 +1,80 @@
+This is an even tighter example relevant code is here:
+
+https://github.com/problem-child/privy-megaeth/blob/main/src/utils/privyNativeSignAndSend.ts
+
+In this example we are using privys built in functions to sign and send.
+As before, this works when the UI confirmation is enabled
+This fails with the UI confirmation disabled
+
+In this example, the transaction does actually get signed, but the issue is when transaction is sent
+
+
+WITH UI CONFIRMS ENABLED
+
+And this is te parsed signed transaction when the UI confirmation is disabled (sign successful, send fails)
+
+    (index) Key Name Key Value Data Type
+    0	'hash'	'"0x71434cc82e45f960e7f5013e63fc98526eba028eb75fb65bb2c58b7939093bc7"'	'string'
+    1	'to'	'"0x4d7F960195b322f6225115D9f34e3830e6F36bb7"'	'string'
+    2	'from'	'"0x4DB5853f6EefEd3E93fCFcFd4A41745412c29626"'	'string'
+    3	'value'	'"300000000000000000"'	'string'
+    4	'valueEth'	'"0.3"'	'string'
+    5	'gasLimit'	'"151694"'	'string'
+    6	'gasPrice'	'"null"'	'string'
+    7	'gasPriceGwei'	'"null"'	'string'
+    8	'nonce'	'50'	'number'
+    9	'data'	'"0xbeebc5da000000000000000000000000000000000000000…000000000000000000000000000000000000000000000001"'	'string'
+    10	'dataLength'	'138'	'number'
+    11	'functionSignature'	'"0xbeebc5da"'	'string'
+    12	'chainId'	'"6342"'	'string'
+    13	'type'	'2'	'number'
+    14	'signature'	'[Object]'	'object'
+    15	'serialized'	'"0x02f8b28218c63280808302508e944d7f960195b322f6225…508f937b1afa9e815f26e18164c7ac6b2543ff7a7b6b8676"'	'string'
+    16	'serializedLength'	'364'	'number'
+
+Signing works and values look sensible following the parse. But the SEND fails:
+
+'transaction underpriced'
+
+privyNativeSignAndSend.ts:126 Error buying shares with Privy native transaction: Error: could not coalesce error (error={ "code": -32603, "message": "An internal error was received.\n\nURL: https://carrot.megaeth.com/rpc\nRequest body: {\"method\":\"eth_sendRawTransaction\",\"params\":[\"0x02f8b28218c63280808302508e944d7f960195b322f6225115d9f34e3830e6f36bb7880429d069189e0000b844beebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001c001a0e13bc3ffaae4582db03547eb7cc856c58b5fb81b38dc662988497fff4d6be41aa074dbce928a85ff1e508f937b1afa9e815f26e18164c7ac6b2543ff7a7b6b8676\"]}\n\nDetails: transaction underpriced\nVersion: viem@2.37.6" }, payload={ "id": 10, "jsonrpc": "2.0", "method": "eth_sendRawTransaction", "params": [ "0x02f8b28218c63280808302508e944d7f960195b322f6225115d9f34e3830e6f36bb7880429d069189e0000b844beebc5da00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001c001a0e13bc3ffaae4582db03547eb7cc856c58b5fb81b38dc662988497fff4d6be41aa074dbce928a85ff1e508f937b1afa9e815f26e18164c7ac6b2543ff7a7b6b8676" ] }, code=UNKNOWN_ERROR, version=6.15.0)
+    at makeError (errors.ts:698:21)
+    at BrowserProvider.getRpcError (provider-jsonrpc.ts:1086:25)
+    at BrowserProvider.getRpcError (provider-browser.ts:193:22)
+    at provider-jsonrpc.ts:571:45
+
+If I reenable the UI confirmation, the same code works fine, and the transaction will send. Thids is is the parsed transaction...
+
+(index)
+Key Name
+Key Value
+Data Type
+0	'hash'	'"0x03f3dcc2bcece6fc5fb925c67e13472bb229cfa283e6fc27631081204f37a69d"'	'string'
+1	'to'	'"0x4d7F960195b322f6225115D9f34e3830e6F36bb7"'	'string'
+2	'from'	'"0x4DB5853f6EefEd3E93fCFcFd4A41745412c29626"'	'string'
+3	'value'	'"300000000000000000"'	'string'
+4	'valueEth'	'"0.3"'	'string'
+5	'gasLimit'	'"151694"'	'string'
+6	'gasPrice'	'"null"'	'string'
+7	'gasPriceGwei'	'"null"'	'string'
+8	'nonce'	'50'	'number'
+9	'data'	'"0xbeebc5da000000000000000000000000000000000000000…000000000000000000000000000000000000000000000001"'	'string'
+10	'dataLength'	'138'	'number'
+11	'functionSignature'	'"0xbeebc5da"'	'string'
+12	'chainId'	'"6342"'	'string'
+13	'type'	'2'	'number'
+14	'signature'	'[Object]'	'object'
+15	'serialized'	'"0x02f8b58218c6328083124f808302508e944d7f960195b32…db25f9ef7f527314a49861a0828bab462b7ca6197d7cc861"'	'string'
+16	'serializedLength'	'370'	'number'
+
+Note that the nonse is the same (due to the original fail), as are all the other input style params.
+Both are type 2 transactions. both have the same gasLimit (151694) and value (0.3 ETH).
+The SIGNATURE and the seiralised length do however differ.
+
+TO RECAP:
+- Same code
+- Same input params
+- Same nonce
+- Same signing method
+- Different signature and serialised length
+- Works with UI confirms enabled
+- Fails with UI confirms disabled
