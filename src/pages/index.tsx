@@ -79,10 +79,10 @@ export default function Home() {
     }
 
     // For Privy and Privy Native methods, we need the user's address, for others we need connector client
-    if ((buyMethod === 'privy' || buyMethod === 'privy-native') && !address) {
+    if ((buyMethod === 'privy' || buyMethod === 'privy-native' || buyMethod === 'privy-native-realtime') && !address) {
       setTxResult({ success: false, error: 'User address not available for Privy method' });
       return;
-    } else if (buyMethod !== 'privy' && buyMethod !== 'privy-native' && !connectorClient) {
+    } else if (buyMethod !== 'privy' && buyMethod !== 'privy-native' && buyMethod !== 'privy-native-realtime' && !connectorClient) {
       setTxResult({ success: false, error: 'Connector client not available' });
       return;
     }
@@ -101,8 +101,8 @@ export default function Home() {
           buyMethod
         );
         setTxResult(result);
-      } else if (buyMethod === 'privy-native') {
-        // Use Privy Native SignTransaction method
+      } else if (buyMethod === 'privy-native' || buyMethod === 'privy-native-realtime') {
+        // Use Privy Native SignTransaction method (optionally with realtime send)
         if (!connectorClient) {
           throw new Error('Connector client not available for provider');
         }
@@ -243,7 +243,7 @@ export default function Home() {
               <div className="md:col-span-2 mb-6">
                 <div className="bg-orange-50 border border-orange-200 rounded-md p-4">
                   <h2 className="text-lg font-semibold text-orange-800 mb-3">
-                    ������ Provider & Network Information
+                    Provider & Network Information
                   </h2>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div className="space-y-2 text-sm">
@@ -372,7 +372,7 @@ export default function Home() {
                     <label className="block text-sm font-semibold text-green-800 mb-3">
                       Transaction Method
                     </label>
-                    <div className="grid gap-3 md:grid-cols-5">
+                    <div className="grid gap-3 md:grid-cols-6">
                       <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
                         <input
                           type="radio"
@@ -443,6 +443,20 @@ export default function Home() {
                           <div className="text-sm text-green-600">Uses Privy native signTransaction</div>
                         </div>
                       </label>
+                      <label className="flex items-center p-3 border-2 border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors">
+                        <input
+                          type="radio"
+                          name="buyMethod"
+                          value="privy-native-realtime"
+                          checked={buyMethod === 'privy-native-realtime'}
+                          onChange={(e) => setBuyMethod(e.target.value as TransactionMethod)}
+                          className="mr-3 text-green-600"
+                        />
+                        <div>
+                          <div className="font-medium text-green-800">🚀 Privy Native Realtime</div>
+                          <div className="text-sm text-green-600">Privy sign + realtime send</div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
@@ -487,7 +501,7 @@ export default function Home() {
 
                   <button
                     onClick={handleBuyShares}
-                    disabled={isLoading || ((buyMethod !== 'privy' && buyMethod !== 'privy-native') && !isConnected)}
+                    disabled={isLoading || ((buyMethod !== 'privy' && buyMethod !== 'privy-native' && buyMethod !== 'privy-native-realtime') && !isConnected)}
                     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded transition duration-200"
                   >
                     {isLoading ? '⏳ Processing...' : `🛒 Buy Shares via ${getMethodDisplayName(buyMethod)}`}
@@ -524,9 +538,9 @@ export default function Home() {
                     </div>
                   )}
 
-                  {(((buyMethod !== 'privy' && buyMethod !== 'privy-native') && !isConnected) || ((buyMethod === 'privy' || buyMethod === 'privy-native') && !address)) && (
+                  {(((buyMethod !== 'privy' && buyMethod !== 'privy-native' && buyMethod !== 'privy-native-realtime') && !isConnected) || ((buyMethod === 'privy' || buyMethod === 'privy-native' || buyMethod === 'privy-native-realtime') && !address)) && (
                     <p className="text-yellow-600 text-sm mt-2">
-                      ⚠️ {(buyMethod === 'privy' || buyMethod === 'privy-native') ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
+                      ⚠️ {(buyMethod === 'privy' || buyMethod === 'privy-native' || buyMethod === 'privy-native-realtime') ? 'Please connect your Privy wallet' : 'Please connect your wallet'} to use this feature
                     </p>
                   )}
                 </div>
